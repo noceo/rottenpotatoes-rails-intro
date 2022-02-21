@@ -7,13 +7,30 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @movies = Movie.all
+    @all_ratings = Movie.ratings
 
     @orderBy = params[:orderBy]
-    puts @orderBy
+    @ratings = params[:ratings]
+
+    if @ratings.nil?
+      ratings = Movie.ratings
+      @all_ratings = Hash[@all_ratings.map{ |rating| [rating, true] }]
+    else
+      ratings = @ratings.keys
+      @all_ratings = Movie.ratings.inject(Hash.new) { |all_ratings, rating|
+        all_ratings[rating] = @ratings.nil? ? false : @ratings.has_key?(rating) 
+        all_ratings
+      }
+    end
+
+    puts @all_ratings
+
     if !@orderBy.nil?
       @movies = Movie.order("#{@orderBy}")
+    else
+      @movies = Movie.with_ratings(ratings)
     end
+    puts ratings
   end
 
   def new
