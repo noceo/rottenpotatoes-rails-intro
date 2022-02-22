@@ -7,6 +7,18 @@ class MoviesController < ApplicationController
   end
 
   def index
+
+    if params[:orderBy].nil? && params[:ratings].nil? && (!session[:orderBy].nil? || !session[:ratings].nil?)
+      flash.keep
+      redirect_to movies_path(:orderBy => session[:orderBy], :ratings => session[:ratings])
+    elsif params[:orderBy].nil? && !session[:orderBy].nil?
+      flash.keep
+      redirect_to movies_path(:orderBy => session[:orderBy], :ratings => params[:ratings])
+    elsif params[:ratings].nil? && !session[:ratings].nil?
+      flash.keep
+      redirect_to movies_path(:orderBy => params[:orderBy], :ratings => session[:ratings])
+    end
+
     @all_ratings = Movie.ratings
 
     @orderBy = params[:orderBy]
@@ -23,14 +35,14 @@ class MoviesController < ApplicationController
       }
     end
 
-    puts @all_ratings
-
     if !@orderBy.nil?
-      @movies = Movie.order("#{@orderBy}")
+      @movies = Movie.order("#{@orderBy}").with_ratings(ratings)
     else
       @movies = Movie.with_ratings(ratings)
     end
-    puts ratings
+    
+    session[:orderBy] = @orderBy
+    session[:ratings] = @ratings
   end
 
   def new
